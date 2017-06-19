@@ -1,0 +1,14 @@
+---
+- name: install-python
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal aptitude)
+
+- name: update-repos
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: install-docker
+  apt:
+    name: docker.io
+    state: present
+    install_recommends: yes
