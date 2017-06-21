@@ -1,0 +1,26 @@
+---
+- name: swarm-init
+  shell: "docker swarm init --advertise-addr={{ inventory_hostname }}"
+  run_once: true
+  register: swarmInitStatus
+  changed_when: swarmInitStatus.rc == 0
+
+- name: create-join-token-managers
+  shell: "docker swarm join-token manager -q"
+  register: managerJoinToken
+  run_once: true
+
+- name: create-join-token-workers
+  shell: "docker swarm join-token worker -q"
+  register: workerJoinToken
+  run_once: true
+
+- name: join-swarm-as-manager
+  shell: "docker swarm join --token {{ managerJoinToken.stdout }} {{ play_hosts[0] }}:2377"
+  when:
+    - inventory_hostname != play_hosts[0]
+    - inventory_hostname in groups['managers']
+
+- name: join-swarm-as-worker
+  shell: "docker swarm join --token {{ workerJoinToken.stdout }} {{ play_hosts[0] }}:2377"
+  when: inventory_hostname in groups['workers']
